@@ -16,7 +16,7 @@ if [ -z "$DOMAIN" ]; then
 fi
 
 echo -e "${YEL}Обновление и установка необходимых пакетов...${NC}"
-apt-get update && apt-get install curl jq dnsutils openssl nginx certbot -y
+apt-get update && apt-get install curl jq dnsutils openssl nginx certbot netcat-openbsd -y
 systemctl enable --now nginx
 
 LOCAL_IP=$(hostname -I | awk '{print $1}')
@@ -572,15 +572,6 @@ done
 
 # Дописываем All links и подвал
 cat >> "$WEB_PATH/$path_subpage.html" <<EOF
-
-<h2>💠 Все конфиги вместе</h2>
-<div class="config-row">
-    <div class="config-code" id="cAll" style="max-height:60px;white-space:pre-wrap;word-break:break-all">$ALL_LINKS_TEXT</div>
-    <button class="btn-action copy-btn" onclick="copyText('cAll', this)">Copy ALL</button>
-    <button class="btn-action qr-btn" onclick="showQR('cAll')">QR</button>
-</div>
-
-<div id="qrModal" class="modal-overlay"><div class="modal-content"><div id="qrcode"></div><button class="close-modal-btn" onclick="closeModal()">Close</button></div></div>
 </body></html>
 EOF
 
