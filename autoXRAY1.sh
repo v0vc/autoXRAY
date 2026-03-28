@@ -572,6 +572,7 @@ done
 
 # Дописываем All links и подвал
 cat >> "$WEB_PATH/$path_subpage.html" <<EOF
+<div id="qrModal" class="modal-overlay"><div class="modal-content"><div id="qrcode"></div><button class="close-modal-btn" onclick="closeModal()">Close</button></div></div>
 </body></html>
 EOF
 
