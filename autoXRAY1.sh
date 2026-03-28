@@ -324,15 +324,17 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
                 "outboundTag": "warp",
                 "domain": [
                     "ifconfig.me",
-                    "checkip.amazonaws.com",
-                    "pify.org",
                     "2ip.io",
                     "habr.com",
+                    "4pda.to",
                     "geosite:google-gemini",
                     "geosite:canva",
                     "geosite:openai",
                     "geosite:whatsapp",
-                    "geosite:category-ru"
+                    "geosite:twitter",
+                    "geosite:meta",
+                    "geosite:telegram",
+                    "geosite:ru-blocked"
                 ]
             }
         ],
@@ -378,7 +380,9 @@ print_config() {
             {
                 "domain": [
                     "habr.com",
-                    "apkmirror.com"
+                    "4pda.to",
+                    "apkmirror.com",
+                    "geosite:ru-blocked"
                 ],
                 "outboundTag": "proxy"
             },
@@ -399,11 +403,7 @@ print_config() {
                     "geosite:google-play",
                     "geosite:steam",
                     "geosite:category-ru",
-                    "geosite:youtube",
-                    "youtube.com",
-                    "googlevideo.com",
-                    "ytimg.com",
-                    "ggpht.com"
+                    "geosite:youtube"
                 ],
                 "outboundTag": "direct"
             },
