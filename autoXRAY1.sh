@@ -237,7 +237,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
             }],
             "decryption": "none",
             "fallbacks": [{
-                "dest": "3333",
+                "dest": "/dev/shm/h1.sock",
                 "xver": 2
             }]
         },
@@ -247,7 +247,8 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
                 "http",
                 "tls",
                 "quic"
-            ]
+            ],
+            "routeOnly": true
         },
         "streamSettings": {
             "network": "raw",
@@ -307,6 +308,10 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
                 "outboundTag": "block"
             },
             {
+                "port": "25",
+                "outboundTag": "block"
+            },
+            {
                 "protocol": [
                     "bittorrent"
                 ],
@@ -323,10 +328,11 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
             {
                 "outboundTag": "warp",
                 "domain": [
-                    "ifconfig.me",
                     "2ip.io",
                     "habr.com",
                     "4pda.to",
+                    "forum.ru-board.com",
+                    "geosite:category-ip-geo-detect",
                     "geosite:google-gemini",
                     "geosite:canva",
                     "geosite:openai",
@@ -381,6 +387,7 @@ print_config() {
                 "domain": [
                     "habr.com",
                     "4pda.to",
+                    "forum.ru-board.com",
                     "apkmirror.com",
                     "geosite:ru-blocked"
                 ],
@@ -415,11 +422,11 @@ print_config() {
             }
         ]
     },
-    "inbounds": [{
-            "tag": "socks-in",
+    "inbounds": [
+        {
+            "listen": "127.0.0.1", 
+            "port": 10808, 
             "protocol": "socks",
-            "listen": "127.0.0.1",
-            "port": 10808,
             "settings": {
                 "udp": true
             },
@@ -429,38 +436,8 @@ print_config() {
                     "http",
                     "tls",
                     "quic"
-                ]
-            }
-        },
-        {
-            "tag": "socks-sb",
-            "protocol": "socks",
-            "listen": "127.0.0.1",
-            "port": 2080,
-            "settings": {
-                "udp": true
-            },
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
-            }
-        },
-        {
-            "tag": "http-in",
-            "protocol": "http",
-            "listen": "127.0.0.1",
-            "port": 10809,
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
+                ],
+                "routeOnly": true
             }
         }
     ],
@@ -611,6 +588,6 @@ $subPageLink
 ${YEL}Ссылка на сохраненные конфиги ${NC}
 ${GRN}$configListLink ${NC}
 
-Открыт локальный socks5 на порту 10808, 2080 и http на 10809.
+Открыт локальный socks5 на порту 10808
 
 "
