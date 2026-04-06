@@ -188,6 +188,7 @@ echo -e "${GRN}✅ Конфигурация nginx обновлена.${NC}"
 SCRIPT_DIR=/usr/local/etc/xray
 
 # Генерируем переменные
+xray_tag="vlessTcpRealityVision"
 xray_uuid_vrv=$(xray uuid)
 key_output=$(xray x25519)
 xray_privateKey_vrv=$(echo "$key_output" | awk -F': ' '/PrivateKey/ {print $2}')
@@ -205,7 +206,7 @@ else
 fi
 
 # Экспортируем переменные для envsubst
-export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH
+export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag
 
 # Создаем JSON конфигурацию сервера
 cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
@@ -226,7 +227,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
         "queryStrategy": "UseIPv4"
     },
     "inbounds": [{
-        "tag": "vlessTcpRealityVision",
+        "tag": "${xray_tag}",
         "port": 443,
         "listen": "0.0.0.0",
         "protocol": "vless",
@@ -492,7 +493,7 @@ echo -e "Перезапуск XRAY"
 subPageLink="https://$DOMAIN/$path_subpage.json"
 
 # Формирование ссылок
-linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=tcp&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=chrome&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#vlessRAWrealityVISION"
+linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=realitytype=tcp&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=chrome&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#${xray_tag}"
 
 configListLink="https://$DOMAIN/$path_subpage.html"
 
