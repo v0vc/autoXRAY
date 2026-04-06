@@ -486,8 +486,10 @@ OUT_REALITY_VISION='{
   echo "]"
 ) | envsubst > "$WEB_PATH/$path_subpage.json"
 
-systemctl restart xray
-echo -e "Перезапуск XRAY"
+echo -e "Обновляем ru geosite/geoip"
+systemctl stop xray
+bash -c "$(curl -L https://github.com/zolg/Xray-install/raw/main/install-release.sh)" @ install-geodata
+systemctl start xray
 
 # Формирование ссылок
 subPageLink="https://$DOMAIN/$path_subpage.json"
