@@ -226,7 +226,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
         "queryStrategy": "UseIPv4"
     },
     "inbounds": [{
-        "tag": "vsRAWrtyVISION",
+        "tag": "vlessTcpRealityVision",
         "port": 443,
         "listen": "0.0.0.0",
         "protocol": "vless",
@@ -251,7 +251,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
             "routeOnly": true
         },
         "streamSettings": {
-            "network": "raw",
+            "network": "tcp",
             "security": "reality",
             "realitySettings": {
                 "show": false,
@@ -470,7 +470,7 @@ OUT_REALITY_VISION='{
     }]
   },
   "streamSettings": {
-    "network": "raw",
+    "network": "tcp",
     "security": "reality",
     "realitySettings": {
       "show": false, "fingerprint": "chrome", "serverName": "$DOMAIN",
@@ -481,7 +481,7 @@ OUT_REALITY_VISION='{
 
 (
   echo "["
-  print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS RAW REALITY VISION"
+  print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS TCP REALITY VISION"
   echo "]"
 ) | envsubst > "$WEB_PATH/$path_subpage.json"
 
@@ -497,7 +497,7 @@ linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=tcp&headerT
 configListLink="https://$DOMAIN/$path_subpage.html"
 
 CONFIGS_ARRAY=(
-  "VLESS RAW REALITY VISION|$linkRTY1"
+  "VLESS TCP REALITY VISION|$linkRTY1"
 )
 ALL_LINKS_TEXT=""
 
@@ -579,7 +579,7 @@ fi
 
 echo -e "
 
-${YEL}VLESS RAW REALITY VISION ${NC}
+${YEL}VLESS TCP REALITY VISION ${NC}
 $linkRTY1
 
 ${YEL}Ваша json страничка подписки ${NC}
