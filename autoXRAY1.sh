@@ -379,13 +379,6 @@ print_config() {
         "domainStrategy": "IPIfNonMatch",
         "rules": [
             {
-                "source_ip_cidr": [
-                    "127.0.0.1/8",
-                    "::1/128"
-                ],
-                "outbound": "direct"
-            },
-            {
                 "protocol": [
                     "bittorrent"
                 ],
@@ -452,12 +445,23 @@ print_config() {
                 "enabled": true,
                 "destOverride": [
                     "http",
-                    "tls",
-                    "quic"
-                ],
-                "routeOnly": true
+                    "tls"
+                ]
+            }
+        },
+        {
+            "listen": "127.0.0.1",
+            "port": 10809,
+            "protocol": "http",
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
             }
         }
+    }
     ],
     "outbounds": [
         $PROXY_OUTBOUND,
