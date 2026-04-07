@@ -302,7 +302,8 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
         }
     ],
     "routing": {
-        "rules": [{
+        "rules": [
+            {
                 "ip": [
                     "geoip:private"
                 ],
@@ -329,10 +330,12 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
             {
                 "outboundTag": "warp",
                 "domain": [
-                    "2ip.io",
-                    "habr.com",
                     "4pda.to",
-                    "forum.ru-board.com",
+                    "habr.com",
+                    "adobe.io",
+                    "jetbrains.ai",
+                    "terraform.io",
+                    "istio.io",
                     "geosite:category-ip-geo-detect",
                     "geosite:google-gemini",
                     "geosite:canva",
@@ -371,13 +374,7 @@ print_config() {
     },
     "routing": {
         "domainStrategy": "IPIfNonMatch",
-        "rules": [{
-                "domain": [
-                    "geosite:category-ads",
-                    "geosite:win-spy"
-                ],
-                "outboundTag": "block"
-            },
+        "rules": [     
             {
                 "protocol": [
                     "bittorrent"
@@ -385,11 +382,26 @@ print_config() {
                 "outboundTag": "direct"
             },
             {
+                "ip": [
+                    "geoip:private"
+                ],
+                "outboundTag": "direct"
+            },
+            {
                 "domain": [
-                    "habr.com",
-                    "4pda.to",
-                    "forum.ru-board.com",
-                    "apkmirror.com",
+                    "geosite:category-ads-all",
+                    "geosite:win-spy"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "ip": [
+                    "geoip:ru-blocked"
+                ],
+                "outboundTag": "proxy"
+            },
+            {
+                "domain": [
                     "geosite:ru-blocked"
                 ],
                 "outboundTag": "proxy"
@@ -410,14 +422,9 @@ print_config() {
                     "geosite:win-extra",
                     "geosite:google-play",
                     "geosite:steam",
+                    "geosite:twitch",
                     "geosite:category-ru",
                     "geosite:youtube"
-                ],
-                "outboundTag": "direct"
-            },
-            {
-                "ip": [
-                    "geoip:private"
                 ],
                 "outboundTag": "direct"
             }
