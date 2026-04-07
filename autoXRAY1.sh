@@ -6,7 +6,10 @@ RED='\033[1;31m'
 YEL='\033[1;33m'
 NC='\033[0m' # No Color
 
-[[ $EUID -eq 0 ]] || { echo -e "${RED}❌ скрипту нужны root права ${NC}"; exit 1; }
+[[ $EUID -eq 0 ]] || {
+    echo -e "${RED}❌ скрипту нужны root права ${NC}"
+    exit 1
+}
 
 DOMAIN=$1
 
@@ -39,13 +42,13 @@ bbr=$(sysctl -a | grep net.ipv4.tcp_congestion_control)
 if [ "$bbr" = "net.ipv4.tcp_congestion_control = bbr" ]; then
     echo -e "${GRN}BBR уже запущен${NC}"
 else
-    echo "net.core.default_qdisc=fq" > /etc/sysctl.d/999-autoXRAY.conf
-    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.d/999-autoXRAY.conf
+    echo "net.core.default_qdisc=fq" >/etc/sysctl.d/999-autoXRAY.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.d/999-autoXRAY.conf
     sysctl --system
     echo -e "${GRN}BBR активирован${NC}"
 fi
 
-cat <<EOF > /etc/security/limits.d/99-autoXRAY.conf
+cat <<EOF >/etc/security/limits.d/99-autoXRAY.conf
 *               soft    nofile          65535
 *               hard    nofile          65535
 root            soft    nofile          65535
@@ -75,8 +78,8 @@ elif [ -f /etc/nginx/conf.d/default.conf ]; then
     echo -e "${YEL}Обнаружена нестандартная сборка nginx. Предварительная настройка NGINX для CERTBOT ${NC}"
     mkdir -p /var/www/html
 
-# Записываем временный конфиг
-cat <<EOF > "$CONFIG_PATH"
+    # Записываем временный конфиг
+    cat <<EOF >"$CONFIG_PATH"
 server {
     listen 80 default_server;
     server_name _;
@@ -106,28 +109,28 @@ chmod 744 /var/lib/xray/cert/privkey.pem
 chmod 744 /var/lib/xray/cert/fullchain.pem
 
 certbot certonly --webroot -w /var/www/html \
-  -d $DOMAIN \
-  -m mail@$DOMAIN \
-  --agree-tos --non-interactive \
-  --deploy-hook "systemctl reload nginx; cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem; cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/fullchain.pem; systemctl restart xray"
+    -d $DOMAIN \
+    -m mail@$DOMAIN \
+    --agree-tos --non-interactive \
+    --deploy-hook "systemctl reload nginx; cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem; cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/fullchain.pem; systemctl restart xray"
 
 RET=$?
 
 if [ $RET -eq 0 ]; then
-  echo -e "\n${GRN}========================================"
-  echo    "✅  Команда certbot успешно выполнена"
-  echo    "✅  Сертификат https от letsencrypt ПОЛУЧЕН"
-  echo    "========================================"
-  echo -e "${NC}"
+    echo -e "\n${GRN}========================================"
+    echo "✅  Команда certbot успешно выполнена"
+    echo "✅  Сертификат https от letsencrypt ПОЛУЧЕН"
+    echo "========================================"
+    echo -e "${NC}"
 else
-  echo -e "\n${RED}========================================"
-  echo    "❌  CERTBOT ЗАВЕРШИЛСЯ С ОШИБКОЙ"
-  echo    "❌  Сертификат https от letsencrypt НЕ ПОЛУЧЕН!"
-  echo    "❌  Смотрите выше логи процесса получения сертификата"
-  echo    "❌  Код возврата: $RET"
-  echo    "========================================"
-  echo -e "${NC}"
-  exit 1
+    echo -e "\n${RED}========================================"
+    echo "❌  CERTBOT ЗАВЕРШИЛСЯ С ОШИБКОЙ"
+    echo "❌  Сертификат https от letsencrypt НЕ ПОЛУЧЕН!"
+    echo "❌  Смотрите выше логи процесса получения сертификата"
+    echo "❌  Код возврата: $RET"
+    echo "========================================"
+    echo -e "${NC}"
+    exit 1
 fi
 # Блок CERTBOT - END
 
@@ -209,7 +212,7 @@ fi
 export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag
 
 # Создаем JSON конфигурацию сервера
-cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
+cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
 {
     "log": {
         "dnsLog": false,
@@ -356,10 +359,10 @@ EOF
 
 # Создаем JSON конфигурацию клиента
 print_config() {
-  local PROXY_OUTBOUND="$1"
-  local REMARK="$2"
+    local PROXY_OUTBOUND="$1"
+    local REMARK="$2"
 
-  cat << TPL
+    cat <<TPL
 {
     "log": {
         "loglevel": "warning"
@@ -488,10 +491,10 @@ OUT_REALITY_VISION='{
 }'
 
 (
-  echo "["
-  print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS TCP REALITY VISION"
-  echo "]"
-) | envsubst > "$WEB_PATH/$path_subpage.json"
+    echo "["
+    print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS TCP REALITY VISION"
+    echo "]"
+) | envsubst >"$WEB_PATH/$path_subpage.json"
 
 echo -e "Обновляем ru geosite/geoip"
 bash -c "$(curl -L https://github.com/zolg/Xray-install/raw/main/install-release.sh)" @ install-geodata
@@ -508,12 +511,12 @@ linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=tcp&headerT
 configListLink="https://$DOMAIN/$path_subpage.html"
 
 CONFIGS_ARRAY=(
-  "VLESS TCP REALITY VISION|$linkRTY1"
+    "VLESS TCP REALITY VISION|$linkRTY1"
 )
 ALL_LINKS_TEXT=""
 
 # --- ЗАПИСЬ HEAD (СТАТИКА, МИНИФИЦИРОВАННЫЕ СТИЛИ И JS) ---
-cat > "$WEB_PATH/$path_subpage.html" <<'EOF'
+cat >"$WEB_PATH/$path_subpage.html" <<'EOF'
 <!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>autoXRAY configs</title>
@@ -529,7 +532,7 @@ function copyText(e,t){navigator.clipboard.writeText(document.getElementById(e).
 EOF
 
 # --- ЗАПИСЬ BODY (ДИНАМИЧЕСКИЕ ДАННЫЕ) ---
-cat >> "$WEB_PATH/$path_subpage.html" <<EOF
+cat >>"$WEB_PATH/$path_subpage.html" <<EOF
 
 <h2>📂 Ссылка на подписку (готовый конфиг клиента с роутингом)</h2>
 <div class="config-row">
@@ -547,7 +550,7 @@ for item in "${CONFIGS_ARRAY[@]}"; do
     title="${item%%|*}"
     link="${item#*|}"
     if [ -z "$ALL_LINKS_TEXT" ]; then ALL_LINKS_TEXT="$link"; else ALL_LINKS_TEXT="$ALL_LINKS_TEXT<br>$link"; fi
-    cat >> "$WEB_PATH/$path_subpage.html" <<EOF
+    cat >>"$WEB_PATH/$path_subpage.html" <<EOF
 <div class="config-row">
     <div class="config-label">$title</div>
     <div class="config-code" id="c$idx">$link</div>
@@ -559,7 +562,7 @@ EOF
 done
 
 # Дописываем All links и подвал
-cat >> "$WEB_PATH/$path_subpage.html" <<EOF
+cat >>"$WEB_PATH/$path_subpage.html" <<EOF
 <div id="qrModal" class="modal-overlay"><div class="modal-content"><div id="qrcode"></div><button class="close-modal-btn" onclick="closeModal()">Close</button></div></div>
 </body></html>
 EOF
