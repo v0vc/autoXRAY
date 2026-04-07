@@ -377,7 +377,14 @@ print_config() {
     },
     "routing": {
         "domainStrategy": "IPIfNonMatch",
-        "rules": [     
+        "rules": [
+            {
+                "source_ip_cidr": [
+                    "127.0.0.1/8",
+                    "::1/128"
+                ],
+                "outbound": "direct"
+            },
             {
                 "protocol": [
                     "bittorrent"
@@ -435,8 +442,8 @@ print_config() {
     },
     "inbounds": [
         {
-            "listen": "127.0.0.1", 
-            "port": 10808, 
+            "listen": "127.0.0.1",
+            "port": 10808,
             "protocol": "socks",
             "settings": {
                 "udp": true
