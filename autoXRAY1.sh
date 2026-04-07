@@ -379,6 +379,13 @@ print_config() {
         "domainStrategy": "IPIfNonMatch",
         "rules": [
             {
+                "source_ip_cidr": [
+                    "127.0.0.1/8",
+                    "::1/128"
+                ],
+                "outbound": "direct"
+            },
+            {
                 "protocol": [
                     "bittorrent"
                 ],
