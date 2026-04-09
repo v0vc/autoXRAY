@@ -200,8 +200,7 @@ xray_shortIds_vrv=$(openssl rand -hex 8)
 path_subpage=$(openssl rand -base64 15 | tr -dc 'A-Za-z0-9' | head -c 20)
 
 # Установка WARP-cli
-# Посмотреть порт(2408): grep -r "Endpoint" /etc/wireguard/
-if ss -tuln | grep -q ":40000 "; then
+if ss -nlt | grep -q ":40000\b"; then
     echo -e "${GRN}WARP-cli (Socks5 на порту 40000) уже работает. Пропускаем.${NC}"
 else
     echo -e "${GRN}Установка WARP-cli (автоматически)...${NC}"
@@ -619,7 +618,5 @@ $subPageLink
 
 ${YEL}Ссылка на сохраненные конфиги ${NC}
 ${GRN}$configListLink ${NC}
-
-Открыт локальный socks5 на порту 10808
 
 "
