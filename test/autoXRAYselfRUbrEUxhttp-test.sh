@@ -107,7 +107,7 @@ DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]' | head -n 1)
 if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo -e "${RED}❌ Внимание: IP-адрес ($LOCAL_IP) не совпадает с A-записью $DOMAIN ($DNS_IP).${NC}"
     echo -e "${YEL}Правильно укажите одну A-запись для вашего домена в ДНС - $LOCAL_IP ${NC}"
-    
+
 	read -p "Продолжить на ваш страх и риск? (y/N):" choice
 
 	if [[ ! "$choice" =~ ^[Yy]$ ]]; then
@@ -772,9 +772,9 @@ idx=1
 for item in "${CONFIGS_ARRAY[@]}"; do
     title="${item%%|*}"
     link="${item#*|}"
-    
+
     if [ -z "$ALL_LINKS_TEXT" ]; then ALL_LINKS_TEXT="$link"; else ALL_LINKS_TEXT="$ALL_LINKS_TEXT<br>$link"; fi
-    
+
     cat >> "$WEB_PATH/$path_subpage.html" <<EOF
 <div class="config-row">
     <div class="config-label">$title</div>

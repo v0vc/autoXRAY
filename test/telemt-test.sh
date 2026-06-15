@@ -56,7 +56,7 @@ hello = "$telemtHEX16"
 
 [[upstreams]]
 type = "socks5"
-address = "127.0.0.1:10443" 
+address = "127.0.0.1:10443"
 username = "$socksUser"
 password = "$socksPasw"
 weight = 10

@@ -17,7 +17,7 @@ DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]')
 if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo "❌ Внимание: IP-адрес ($LOCAL_IP) не совпадает с A-записью $DOMAIN ($DNS_IP)."
     echo "Правильно укажите одну A-запись для вашего домена в ДНС - $LOCAL_IP"
-    
+
     read -p "Продолжить на ваш страх и риск? (y/N): " choice
     if [[ ! "$choice" =~ ^[Yy]$ ]]; then
         echo "Выполнение скрипта прервано."
@@ -103,7 +103,7 @@ HEADERS=("Welcome to FileShare" "Login to Your CloudBox" "Enter Your Secure Vaul
 BUTTON_COLORS=("bg-blue-600" "bg-green-600" "bg-red-600" "bg-yellow-600" "bg-purple-600" "bg-pink-600" "bg-indigo-600"
                "bg-teal-600" "bg-orange-600" "bg-cyan-600" "bg-lime-600" "bg-amber-600" "bg-fuchsia-600" "bg-violet-600"
                "bg-rose-600" "bg-emerald-600" "bg-sky-600" "bg-gray-600" "bg-zinc-600" "bg-stone-600")
-			   
+			
 BUTTON_TEXTS=("Sign In" "Log In" "Login" "Access Account" "Enter Account"
               "Sign In to Continue" "Sign In to Dashboard" "Log In to Your Account" "Continue to Account" "Access Your Dashboard"
               "Let’s Go" "Welcome Back!" "Get Started" "Join Us Again" "Back Again? Sign In"

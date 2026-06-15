@@ -49,10 +49,10 @@ else
 fi
 
 cat <<EOF >/etc/security/limits.d/99-autoXRAY.conf
-*               soft    nofile          65535
-*               hard    nofile          65535
-root            soft    nofile          65535
-root            hard    nofile          65535
+*       soft    nofile  1048576
+*       hard    nofile  1048576
+root    soft    nofile  1048576
+root    hard    nofile  1048576
 EOF
 ulimit -n 65535
 echo -e "${GRN}Лимиты применены. Текущий ulimit -n: $(ulimit -n) ${NC}"
@@ -161,14 +161,6 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
     }
-    location /${path_xhttp}11 {
-        if (\$request_method != "POST") {
-            return 404;
-        }
-        client_body_buffer_size 1m;
-        client_body_timeout 1h;
-        client_max_body_size 0;
-    }
     location ~ /\.ht {
         deny all;
     }
@@ -191,16 +183,19 @@ echo -e "${GRN}✅ Конфигурация nginx обновлена.${NC}"
 SCRIPT_DIR=/usr/local/etc/xray
 
 # Генерируем переменные
-xray_tag="vlessTcpRealityVision"
+xray_tag="VlessRawRealityVision"
+hysteria_tag="Hysteria2"
 xray_uuid_vrv=$(xray uuid)
 key_output=$(xray x25519)
 xray_privateKey_vrv=$(echo "$key_output" | awk -F': ' '/PrivateKey/ {print $2}')
 xray_publicKey_vrv=$(echo "$key_output" | awk -F': ' '/Password/ {print $2}')
 xray_shortIds_vrv=$(openssl rand -hex 8)
 path_subpage=$(openssl rand -base64 15 | tr -dc 'A-Za-z0-9' | head -c 20)
+socksUser=$(openssl rand -base64 16 | tr -dc 'A-Za-z0-9' | head -c 6)
+socksPasw=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 16)
 
 # Установка WARP-cli
-if ss -nlt | grep -q ":40000\b"; then
+if ss -tuln | grep -q ":40000 "; then
     echo -e "${GRN}WARP-cli (Socks5 на порту 40000) уже работает. Пропускаем.${NC}"
 else
     echo -e "${GRN}Установка WARP-cli (автоматически)...${NC}"
@@ -208,7 +203,7 @@ else
 fi
 
 # Экспортируем переменные для envsubst
-export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag
+export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag hysteria_tag socksUser socksPasw
 
 # Создаем JSON конфигурацию сервера
 cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
@@ -229,58 +224,151 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
         "queryStrategy": "UseIPv4"
     },
     "inbounds": [{
-        "tag": "${xray_tag}",
-        "port": 443,
-        "listen": "0.0.0.0",
-        "protocol": "vless",
-        "settings": {
-            "clients": [{
-                "flow": "xtls-rprx-vision",
-                "id": "${xray_uuid_vrv}"
-            }],
-            "decryption": "none",
-            "fallbacks": [{
-                "dest": "/dev/shm/h1.sock",
-                "xver": 2
-            }]
-        },
-        "sniffing": {
-            "enabled": true,
-            "destOverride": [
-                "http",
-                "tls",
-                "quic"
-            ],
-            "routeOnly": true
-        },
-        "streamSettings": {
-            "network": "tcp",
-            "security": "reality",
-            "realitySettings": {
-                "show": false,
-                "xver": 2,
-                "target": "/dev/shm/nginx.sock",
-                "spiderX": "/",
-                "shortIds": [
-                    "${xray_shortIds_vrv}"
-                ],
-                "privateKey": "${xray_privateKey_vrv}",
-                "serverNames": [
-                    "$DOMAIN"
-                ],
-                "limitFallbackUpload": {
-                    "afterBytes": 0,
-                    "bytesPerSec": 65536,
-                    "burstBytesPerSec": 0
+            "tag": "${xray_tag}",
+            "port": 443,
+            "listen": "0.0.0.0",
+            "protocol": "vless",
+            "settings": {
+                "clients": [{
+                    "flow": "xtls-rprx-vision",
+                    "id": "${xray_uuid_vrv}"
+                }],
+                "decryption": "none",
+                "fallbacks": [{
+                    "dest": "3333",
+                    "xver": 2
+                }]
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            },
+            "streamSettings": {
+                "network": "raw",
+                "security": "reality",
+                "sockopt": {
+                    "acceptProxyProtocol": false
                 },
-                "limitFallbackDownload": {
-                    "afterBytes": 5242880,
-                    "bytesPerSec": 262144,
-                    "burstBytesPerSec": 2097152
+                "realitySettings": {
+                    "show": false,
+                    "xver": 2,
+                    "target": "/dev/shm/nginx.sock",
+                    "spiderX": "/",
+                    "shortIds": [
+                        "${xray_shortIds_vrv}"
+                    ],
+                    "privateKey": "${xray_privateKey_vrv}",
+                    "serverNames": [
+                        "$DOMAIN"
+                    ]
+                }
+            }
+        },
+        {
+            "tag": "vsXHTTPrty",
+            "port": 3333,
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [{
+                    "id": "${xray_uuid_vrv}"
+                }],
+                "decryption": "none"
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            },
+            "streamSettings": {
+                "network": "xhttp",
+                "xhttpSettings": {
+                    "mode": "stream-one",
+                    "path": "/${path_xhttp}"
+                },
+                "security": "none",
+                "sockopt": {
+                    "acceptProxyProtocol": true
+                }
+            }
+        },
+        {
+            "tag": "vsXHTTPtls",
+            "port": 8400,
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [{
+                    "id": "${xray_uuid_vrv}"
+                }],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "xhttp",
+                "xhttpSettings": {
+                    "mode": "auto",
+                    "path": "/${path_xhttp}"
+                },
+                "security": "none",
+                "sockopt": {
+                    "acceptProxyProtocol": false
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            }
+        },
+        {
+            "tag": "${hysteria_tag}",
+            "listen": "0.0.0.0",
+            "port": 8080,
+            "protocol": "hysteria",
+            "settings": {
+                "version": 2,
+                "clients": [{
+                    "auth": "${xray_shortIds_vrv}"
+                }]
+            },
+            "streamSettings": {
+                "network": "hysteria",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "$DOMAIN",
+                    "alpn": [
+                        "h3"
+                    ],
+                    "certificates": [{
+                        "usage": "encipherment",
+                        "certificateFile": "/var/lib/xray/cert/fullchain.pem",
+                        "keyFile": "/var/lib/xray/cert/privkey.pem"
+                    }]
+                },
+                "hysteriaSettings": {
+                    "version": 2,
+                    "auth": "${xray_shortIds_vrv}"
+                },
+                "finalmask": {
+                    "quicParams": {
+                        "congestion": "brutal",
+                        "brutalUp": "100 mbps",
+                        "brutalDown": "100 mbps"
+                    }
                 }
             }
         }
-    }],
+    ],
     "outbounds": [{
             "tag": "direct",
             "protocol": "freedom",
@@ -304,8 +392,7 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
         }
     ],
     "routing": {
-        "rules": [
-            {
+        "rules": [{
                 "ip": [
                     "geoip:private"
                 ],
@@ -378,13 +465,6 @@ print_config() {
         "domainStrategy": "IPIfNonMatch",
         "rules": [
             {
-                "source_ip_cidr": [
-                    "127.0.0.1/8",
-                    "::1/128"
-                ],
-                "outbound": "direct"
-            },
-            {
                 "protocol": [
                     "bittorrent"
                 ],
@@ -441,9 +521,10 @@ print_config() {
     },
     "inbounds": [
         {
+            "tag": "socks-in",
+            "protocol": "socks",
             "listen": "127.0.0.1",
             "port": 10808,
-            "protocol": "socks",
             "settings": {
                 "udp": true
             },
@@ -451,23 +532,25 @@ print_config() {
                 "enabled": true,
                 "destOverride": [
                     "http",
-                    "tls"
+                    "tls",
+                    "quic"
                 ]
             }
         },
         {
+            "tag": "http-in",
+            "protocol": "http",
             "listen": "127.0.0.1",
             "port": 10809,
-            "protocol": "http",
             "sniffing": {
                 "enabled": true,
                 "destOverride": [
                     "http",
-                    "tls"
+                    "tls",
+                    "quic"
                 ]
             }
         }
-    }
     ],
     "outbounds": [
         $PROXY_OUTBOUND,
@@ -487,29 +570,75 @@ TPL
 
 # --- Config 1
 OUT_REALITY_VISION='{
-  "mux": { "concurrency": -1, "enabled": false },
-  "tag": "proxy",
-  "protocol": "vless",
-  "settings": {
+"mux": {
+    "concurrency": -1,
+    "enabled": false
+},
+"tag": "proxy",
+"protocol": "vless",
+"settings": {
     "vnext": [{
-      "address": "$DOMAIN",
-      "port": 443,
-      "users": [{ "id": "${xray_uuid_vrv}", "flow": "xtls-rprx-vision", "encryption": "none" }]
+        "address": "$DOMAIN",
+        "port": 443,
+        "users": [{
+            "id": "${xray_uuid_vrv}",
+            "flow": "xtls-rprx-vision",
+            "encryption": "none"
+        }]
     }]
-  },
-  "streamSettings": {
-    "network": "tcp",
+},
+"streamSettings": {
+    "network": "raw",
     "security": "reality",
     "realitySettings": {
-      "show": false, "fingerprint": "chrome", "serverName": "$DOMAIN",
-      "password": "${xray_publicKey_vrv}", "shortId": "${xray_shortIds_vrv}", "spiderX": "/"
+        "show": false,
+        "fingerprint": "firefox",
+        "serverName": "$DOMAIN",
+        "password": "${xray_publicKey_vrv}",
+        "shortId": "${xray_shortIds_vrv}",
+        "spiderX": "/"
     }
-  }
+}
+}'
+
+# --- Config 2
+HYSTERIA2='{
+"tag": "proxy",
+"protocol": "hysteria",
+"settings": {
+    "address": "$DOMAIN",
+    "port": 8080,
+    "version": 2
+},
+"streamSettings": {
+    "network": "hysteria",
+    "security": "tls",
+    "tlsSettings": {
+        "serverName": "$DOMAIN",
+        "alpn": [
+            "h3"
+        ]
+    },
+    "fingerprint": "firefox",
+    "hysteriaSettings": {
+        "version": 2,
+        "auth": "${xray_shortIds_vrv}"
+    },
+    "finalmask": {
+        "quicParams": {
+            "congestion": "brutal",
+            "brutalUp": "100 mbps",
+            "brutalDown": "100 mbps"
+        }
+    }
+}
 }'
 
 (
     echo "["
     print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS TCP REALITY VISION"
+    echo ","
+    print_config "$HYSTERIA2" "🇪🇺 HYSTERIA2"
     echo "]"
 ) | envsubst >"$WEB_PATH/$path_subpage.json"
 
@@ -524,11 +653,13 @@ subPageLink="https://$DOMAIN/$path_subpage.json"
 
 # Формирование ссылок
 linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=tcp&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=chrome&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#${xray_tag}"
+hy2="hy2://${xray_shortIds_vrv}@$DOMAIN:8080/?sni=$DOMAIN&alpn=h3"
 
 configListLink="https://$DOMAIN/$path_subpage.html"
 
 CONFIGS_ARRAY=(
     "VLESS TCP REALITY VISION|$linkRTY1"
+    "HYSTERIA2|$hy2"
 )
 ALL_LINKS_TEXT=""
 

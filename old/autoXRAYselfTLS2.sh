@@ -17,7 +17,7 @@ DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]')
 if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo "❌ Внимание: IP-адрес ($LOCAL_IP) не совпадает с A-записью $DOMAIN ($DNS_IP)."
     echo "Правильно укажите одну A-запись для вашего домена в ДНС - $LOCAL_IP"
-    
+
     read -p "Продолжить на ваш страх и риск? (y/N): " choice
     if [[ ! "$choice" =~ ^[Yy]$ ]]; then
         echo "Выполнение скрипта прервано."
@@ -130,7 +130,7 @@ HEADERS=("Welcome to FileShare" "Login to Your CloudBox" "Enter Your Secure Vaul
 BUTTON_COLORS=("bg-blue-600" "bg-green-600" "bg-red-600" "bg-yellow-600" "bg-purple-600" "bg-pink-600" "bg-indigo-600"
                "bg-teal-600" "bg-orange-600" "bg-cyan-600" "bg-lime-600" "bg-amber-600" "bg-fuchsia-600" "bg-violet-600"
                "bg-rose-600" "bg-emerald-600" "bg-sky-600" "bg-gray-600" "bg-zinc-600" "bg-stone-600")
-			   
+			
 BUTTON_TEXTS=("Sign In" "Log In" "Login" "Access Account" "Enter Account"
               "Sign In to Continue" "Sign In to Dashboard" "Log In to Your Account" "Continue to Account" "Access Your Dashboard"
               "Let’s Go" "Welcome Back!" "Get Started" "Join Us Again" "Back Again? Sign In"
@@ -281,7 +281,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
             }
           ],
           "minVersion": "1.2",
-          "cipherSuites": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", 
+          "cipherSuites": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
           "alpn": [
             "h2", "http/1.1"
           ]
@@ -823,7 +823,7 @@ linkSS="ss://${ENCODED_STRING}@${DOMAIN}:8443#Shadowsocks2022-autoXRAY"
 
 configListLink="https://$DOMAIN/$path_subpage.html"
 
-    
+
 # Создаем html файл с конфигами
 cat > "$WEB_PATH/$path_subpage.html" <<EOF
 <!DOCTYPE html>
@@ -837,7 +837,7 @@ cat > "$WEB_PATH/$path_subpage.html" <<EOF
     body { font-family: monospace; background: #121212; color: #e0e0e0; padding: 20px; max-width: 800px; margin: 0 auto; }
     h3 { color: #82aaff; border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px; }
     h2 { color: #c3e88d; border-top: 2px solid #333; padding-top: 20px; margin-top: 40px; }
-    
+
     /* Стили для строки с конфигом */
     .config-row {
         background: #1e1e1e;
@@ -849,7 +849,7 @@ cat > "$WEB_PATH/$path_subpage.html" <<EOF
         gap: 10px;
         margin-bottom: 10px;
     }
-    
+
     /* Контейнер для текста ссылки */
     .config-code {
         flex: 1;
@@ -873,7 +873,7 @@ cat > "$WEB_PATH/$path_subpage.html" <<EOF
         overflow-y: auto;      /* Вертикальная прокрутка */
         font-size: 12px;       /* Чуть меньший шрифт для компактности */
     }
-    
+
     /* Кнопка копирования */
     .copy-btn {
         background: #2c2c2c;
@@ -985,13 +985,13 @@ cat > "$WEB_PATH/$path_subpage.html" <<EOF
 </html>
 EOF
 
-  
+
 
 echo -e "
 Ваша json страничка подписки:
 \033[32m$subPageLink\033[0m
 
-Ссылка на сохраненные конфиги: 
+Ссылка на сохраненные конфиги:
 \033[32m$configListLink\033[0m
 
 Скопируйте подписку в специализированное приложение:

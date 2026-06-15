@@ -235,11 +235,11 @@ tgTOKEN=$2
 if [ -n "$userID" ]; then
 # Формируем сообщение (в Markdown для красивого вида)
 message="<b>VPN конфиги:</b>
- 
+
 1) <code>$link1</code>
- 
+
 2) <code>$link2</code>
- 
+
 3) <code>$link3</code>
 
 №1 - самый надежный, остальные резервные!

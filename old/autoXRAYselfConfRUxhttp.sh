@@ -17,7 +17,7 @@ DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]')
 if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo "❌ Внимание: IP-адрес ($LOCAL_IP) не совпадает с A-записью $DOMAIN ($DNS_IP)."
     echo "Правильно укажите одну A-запись для вашего домена в ДНС - $LOCAL_IP"
-    
+
 	read -p $'\033[1;31mПродолжить на ваш страх и риск? (y/N): \033[0m' choice
 	if [[ ! "$choice" =~ ^[Yy]$ ]]; then
 		echo -e "\033[31mВыполнение скрипта прервано.\033[0m"
@@ -339,7 +339,7 @@ cat << 'EOF' | envsubst > "$SCRIPT_DIR/config.json"
           {
 			"user": "${socksUser}",
             "pass": "${socksPasw}"
-            
+
           }
         ]
       }
@@ -735,9 +735,9 @@ idx=1
 for item in "${CONFIGS_ARRAY[@]}"; do
     title="${item%%|*}"
     link="${item#*|}"
-    
+
     if [ -z "$ALL_LINKS_TEXT" ]; then ALL_LINKS_TEXT="$link"; else ALL_LINKS_TEXT="$ALL_LINKS_TEXT<br>$link"; fi
-    
+
     cat >> "$WEB_PATH/$path_subpage.html" <<EOF
 <div class="config-row">
     <div class="config-label">$title</div>
@@ -788,7 +788,7 @@ $linkSS
 Ваша страничка подписки:
 \033[1;32m$subPageLink\033[0m
 
-Ссылка на сохраненные конфиги: 
+Ссылка на сохраненные конфиги:
 \033[1;32m$configListLink\033[0m
 
 Скопируйте подписку в специализированное приложение:
