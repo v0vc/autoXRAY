@@ -185,6 +185,7 @@ SCRIPT_DIR=/usr/local/etc/xray
 # Генерируем переменные
 xray_tag="VlessRawRealityVision"
 hysteria_tag="Hysteria2"
+fpBro="firefox"
 xray_uuid_vrv=$(xray uuid)
 key_output=$(xray x25519)
 xray_privateKey_vrv=$(echo "$key_output" | awk -F': ' '/PrivateKey/ {print $2}')
@@ -203,7 +204,7 @@ else
 fi
 
 # Экспортируем переменные для envsubst
-export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag hysteria_tag socksUser socksPasw
+export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag hysteria_tag socksUser socksPasw fpBro
 
 # Создаем JSON конфигурацию сервера
 cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
@@ -592,7 +593,7 @@ OUT_REALITY_VISION='{
     "security": "reality",
     "realitySettings": {
         "show": false,
-        "fingerprint": "firefox",
+        "fingerprint": "$fpBro",
         "serverName": "$DOMAIN",
         "password": "${xray_publicKey_vrv}",
         "shortId": "${xray_shortIds_vrv}",
@@ -619,7 +620,7 @@ HYSTERIA2='{
             "h3"
         ]
     },
-    "fingerprint": "firefox",
+    "fingerprint": "$fpBro",
     "hysteriaSettings": {
         "version": 2,
         "auth": "${xray_shortIds_vrv}"
@@ -636,7 +637,7 @@ HYSTERIA2='{
 
 (
     echo "["
-    print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS TCP REALITY VISION"
+    print_config "$OUT_REALITY_VISION" "🇪🇺 VLESS RAW REALITY VISION"
     echo ","
     print_config "$HYSTERIA2" "🇪🇺 HYSTERIA2"
     echo "]"
@@ -652,13 +653,13 @@ echo -e "Перезапуск XRAY"
 subPageLink="https://$DOMAIN/$path_subpage.json"
 
 # Формирование ссылок
-linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=tcp&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=chrome&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#${xray_tag}"
+linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=raw&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=$fpBro&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#${xray_tag}"
 hy2="hy2://${xray_shortIds_vrv}@$DOMAIN:8080/?sni=$DOMAIN&alpn=h3"
 
 configListLink="https://$DOMAIN/$path_subpage.html"
 
 CONFIGS_ARRAY=(
-    "VLESS TCP REALITY VISION|$linkRTY1"
+    "VLESS RAW REALITY VISION|$linkRTY1"
     "HYSTERIA2|$hy2"
 )
 ALL_LINKS_TEXT=""
@@ -741,8 +742,11 @@ fi
 
 echo -e "
 
-${YEL}VLESS TCP REALITY VISION ${NC}
+${YEL}VLESS RAW REALITY VISION ${NC}
 $linkRTY1
+
+${YEL}HYSTERIA2 ${NC}
+$hy2
 
 ${YEL}Ваша json страничка подписки ${NC}
 $subPageLink
