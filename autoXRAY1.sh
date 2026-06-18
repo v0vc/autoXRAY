@@ -183,7 +183,7 @@ echo -e "${GRN}✅ Конфигурация nginx обновлена.${NC}"
 SCRIPT_DIR=/usr/local/etc/xray
 
 # Генерируем переменные
-xray_tag="VlessRawRealityVision"
+xray_tag="VlessReality"
 hysteria_tag="Hysteria2"
 fpBro="firefox"
 xray_uuid_vrv=$(xray uuid)
@@ -654,7 +654,7 @@ subPageLink="https://$DOMAIN/$path_subpage.json"
 
 # Формирование ссылок
 linkRTY1="vless://${xray_uuid_vrv}@$DOMAIN:443?security=reality&type=raw&headerType=&path=&host=&flow=xtls-rprx-vision&sni=$DOMAIN&fp=$fpBro&pbk=${xray_publicKey_vrv}&sid=${xray_shortIds_vrv}&spx=%2F#${xray_tag}"
-hy2="hy2://${xray_shortIds_vrv}@$DOMAIN:8080/?sni=$DOMAIN&alpn=h3"
+hy2="hy2://${xray_shortIds_vrv}@$DOMAIN:8080/?sni=$DOMAIN&alpn=h3#${hysteria_tag}"
 
 configListLink="https://$DOMAIN/$path_subpage.html"
 
