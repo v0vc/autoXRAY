@@ -389,7 +389,8 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
                     "address": "127.0.0.1",
                     "port": 40000
                 }]
-            }
+            },
+           	"targetStrategy": "ForceIPv4v6"
         }
     ],
     "routing": {
