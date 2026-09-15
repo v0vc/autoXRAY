@@ -1,24 +1,12 @@
 # autoXRAY - личный ВПН сервер
 Bash-скрипт для автоматической настройки ядра [Xray](https://github.com/XTLS/Xray-core). Предназначен для удобного получения актуальных конфигураций VPN для семейного/личного использования, настраивает selfsteal VLESS [XHTTP](https://github.com/XTLS/Xray-core/discussions/4113#discussioncomment-11468947) / [RAW](https://github.com/XTLS/REALITY/blob/main/README.en.md) REALITY.
 
-**UPD5: Добавлена тестовая сборка для подключения MTProto proxy FakeTLS - [readme-test.md](https://github.com/xVRVx/autoXRAY/blob/main/test/readme-test.md)** 
-
-**UPD4: Основной скрипт автоматически ставит WARP-cli.** 
-
-**UPD3: Основной и Экспериментальный скрипты объединены, ss2022 удален.** 
-
-**UPD2: Описание неактуальных скриптов перемещено в [oldScriptReadme.md](https://github.com/xVRVx/autoXRAY/blob/main/old/oldScriptReadme.md).**
-
-**UPD1: Добавлен новый раздел — [построение моста RU -> EU](#%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC-%D0%BC%D0%BE%D1%81%D1%82-ru---eu).**
-
-Тестируется на: чистом Debian 12 с root правами.
-
 ===========================================================================
 
 ## Конфигурация с клиентским конфигом для РФ (рекомендуется)
 Будем использовать маскировку под собственный сайт (selfsteal), который крутится на вашем же VPS. 
 
-Для установки надо [арендовать VPS](#выбор-сервера-подбирал-промо-тарифы) и [получить домен](#получаем-домен).
+Для установки надо арендовать VPS и получить домен.
 
 Автоматически перенаправляет весь ру трафик напрямую.
 ```bash
@@ -28,37 +16,18 @@ bash -c "$(curl -L https://raw.githubusercontent.com/v0vc/autoXRAY/main/autoXRAY
 
 **Вы получите:**
 1) vless RAW reality VISION на 443 порту - хорошая маскировка, быстрый.
+2) Hysteria2 на 8080 порту
 
 ===========================================================================
-
-## Выбор сервера (подбирал промо тарифы)
-
-- [XorekCloud](https://xorek.cloud/?from=28522) - промо тариф за 149 руб./мес. (полноценный за 249).
-- [intezio](https://intezio.net/?ref=3d2bf6736da6) - промо от 179 руб.
-- [WAICORE](https://waicore.com/?from=3063) - от 3€, есть оплата рублями.
-- [notbad](https://my.notbad.cloud/?from=188) - от 3$, есть оплата рублями, хороший курс и канал.
-- [senko.digital](https://senko.digital/?ref=47670) - от 2€, есть днс-хостинг и домены для selfsteel, есть оплата СБП.
-
-- [hosting-russia](https://hosting-russia.ru/?p=57731) - ru сервера от 250 рублей, для моста ru-eu (тут слабый ТСПУ и ютуб работает без рекламы).
-- [cloudcore](https://cloudcore.ru/?affiliate_uuid=e9ad7432-7898-4de2-8606-38eb90e0c1a6) - ru сервера от 100 рублей, для моста ru-eu.
-
-
-Имейте в виду, что подсети популярных хостинг-провайдеров, таких как аеза, pq(ufo), ishosting и др., заблокированы многими провайдерами(РКН). К ним порой даже невозможно подключиться по SSH (без VPN). Поэтому, пожалуйста, не используйте их или не жалуйтесь, что у вас не работает основной скрипт.
-
 
 ## Получаем домен
 
 **Получаем бесплатный поддомен**: регестрируемся в [cloudns](https://www.cloudns.net/aff/id/1919804/). Далее: Управление -> DNS Хостинг -> Создать зону -> Свободная зона -> вводим рандомное имя для поддомена.
 Теперь надо создать A-запись: Новая запись -> Тип А -> Хост (имя субдомена) -> Указывает на (IP адрес вашего VPS).
 
-Еще бесплатный поддомен можно получить тут -> https://freedns.afraid.org/ (он немного лагучий, но на первом иногда возникают лимиты на Let's Encrypt).
-
-**Платный домен и бесплатный днс-хостинг можно получить** в [senko.digital](https://senko.digital/?ref=47670). Здесь же можно арендовать промо VPS.
-Платные сервисы, как правило, работают стабильнее.
+Еще бесплатный поддомен можно получить тут: https://www.duckdns.org/ или https://freedns.afraid.org/
 
 Помните, что DNS-записи обновляются не сразу: иногда это занимает 15 минут, иногда — час и более. Проверить - [xseo.in/dns](https://xseo.in/dns).
-
-
 
 ## Настройка VPN
 **Скопируйте конфиг (страничка подписки) в специализированное приложение:**
@@ -144,34 +113,11 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 
 После изменений ядро надо перезапустить: **systemctl restart xray**
 
-
 ===========================================================================
-
-## Настраиваем мост RU -> EU
-Многие столкнулись с блокировками хостинг-сетей по TLS (особенно при использовании мобильного интернета). Существует решение — построение моста между серверами в разных локациях. Для этого необходимо:
-
-1) На заблокированный чистый VPS ставим стандартный рекомендованный скрипт и берем получившийся vless XHTTP reality EXTRA (конфиг №1):
-```bash
-bash -c "$(curl -L https://raw.githubusercontent.com/xVRVx/autoXRAY/main/autoXRAY1.sh)" -- поддомен1.вашДОМЕН.com
-
-```
-2) На ru VPS ставим новый скрипт (здесь нам понадобится vless XHTTP reality EXTRA конфиг №1):
-```bash
-bash -c "$(curl -L https://raw.githubusercontent.com/xVRVx/autoXRAY/main/autoXRAYselfRUbrEUxhttp.sh)" -- поддомен2.вашДОМЕН.com "vless://вашКонфигXHTTP"
-```
-Установится прокси мост между серверами, итоговая цепочка: конфиг клиента -> ru VPS -> eu VPS -> зарубежный сайт
-
-Также можно взять vless RAW reality VISION и использовать предыдущий скрипт моста:
-```bash
-bash -c "$(curl -L https://raw.githubusercontent.com/xVRVx/autoXRAY/main/old/autoXRAYselfstealConfRUbrEU.sh)" -- поддомен2.вашДОМЕН.com "vless://вашКонфигRAW"
-```
-
-
-===
 
 **Если вы хотите пускать YouTube через ruVPS (у вас он без ТСПУ или вы поставили и настроили [zapret4rocket](https://github.com/IndeecFOX/zapret4rocket))**
 
-Тогда в конфиге ruVPS, который лежит /usr/local/etc/xray/config.json надо добавить в строке 146:
+Тогда в конфиге ruVPS, который лежит /usr/local/etc/xray/config.json надо добавить в секцию "domain": [сюда], "outboundTag": "direct"
 ```bash
 "geosite:youtube",
 "youtube.com",
@@ -200,8 +146,8 @@ bash -c "$(curl -L https://raw.githubusercontent.com/xVRVx/autoXRAY/main/old/aut
 
 После этого можно удалить WARP-cli, если это необходимо.
 
-===========================================================================
+**Если возникла ошбика при установке WARP** - [читайте инструкцию.](https://github.com/xVRVx/autoXRAY/blob/main/test/warp-readme.md)
 
 Скрипты будут дорабатываться до актуального состояния.
 
-**[Поддержать автора.](https://pay.cryptocloud.plus/pos/Weu1Y0fOhLho0nte)**
+**[Поддержать автора.](https://pay.trybit.com/pos/Weu1Y0fOhLho0nte)**

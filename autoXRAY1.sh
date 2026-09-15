@@ -23,7 +23,7 @@ apt-get update && apt-get install curl jq dnsutils openssl nginx certbot netcat-
 systemctl enable --now nginx
 
 LOCAL_IP=$(hostname -I | awk '{print $1}')
-DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]')
+DNS_IP=$(dig +short "$DOMAIN" | grep '^[0-9]' | head -n 1)
 
 if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo -e "${RED}❌ Внимание: IP-адрес ($LOCAL_IP) не совпадает с A-записью $DOMAIN ($DNS_IP).${NC}"
@@ -37,18 +37,48 @@ if [ "$LOCAL_IP" != "$DNS_IP" ]; then
     echo -e "${YEL}Продолжение выполнения скрипта...${NC}"
 fi
 
+# === ВОПРОСЫ ПОЛЬЗОВАТЕЛЮ ===
+read -p "$(echo -e "\n${YEL}Устанавливать WARP для обхода блокировок некоторых сайтов? (y/n, по умолчанию n): ${NC}")" choice_warp
+choice_warp=${choice_warp:-n}
+if [[ "$choice_warp" =~ ^[Yy]$ ]]; then
+    TAG_WARP="warp"
+    INSTALL_WARP=true
+else
+    TAG_WARP="direct"
+    INSTALL_WARP=false
+fi
+
+echo -e "\n${YEL}Выберите TLS fingerprint для маскировки трафика:${NC}"
+echo "1) chrome    3) safari   5) android   7) 360"
+echo "2) firefox   4) ios      6) edge      8) qq"
+read -p "Введите номер [1-8] (по умолчанию 2 - firefox): " fp_choice
+
+case $fp_choice in
+    1) fpBro="chrome" ;;
+    2) fpBro="firefox" ;;
+    3) fpBro="safari" ;;
+    4) fpBro="ios" ;;
+    5) fpBro="android" ;;
+    6) fpBro="edge" ;;
+    7) fpBro="360" ;;
+    8) fpBro="qq" ;;
+    *) fpBro="firefox" ;;
+esac
+# ============================
+
 # Включаем BBR
-bbr=$(sysctl -a | grep net.ipv4.tcp_congestion_control)
-if [ "$bbr" = "net.ipv4.tcp_congestion_control = bbr" ]; then
+bbr=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+if [ "$bbr" = "bbr" ]; then
     echo -e "${GRN}BBR уже запущен${NC}"
 else
-    echo "net.core.default_qdisc=fq" >/etc/sysctl.d/999-autoXRAY.conf
-    echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.d/999-autoXRAY.conf
+    echo "net.core.default_qdisc=fq" > /etc/sysctl.d/999-autoXRAY.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.d/999-autoXRAY.conf
     sysctl --system
     echo -e "${GRN}BBR активирован${NC}"
 fi
 
-cat <<EOF >/etc/security/limits.d/99-autoXRAY.conf
+
+cat <<EOF > /etc/security/limits.d/99-autoXRAY.conf
 *       soft    nofile  1048576
 *       hard    nofile  1048576
 root    soft    nofile  1048576
@@ -57,88 +87,117 @@ EOF
 ulimit -n 65535
 echo -e "${GRN}Лимиты применены. Текущий ulimit -n: $(ulimit -n) ${NC}"
 
+
 # Создание директории сайта
 WEB_PATH="/var/www/$DOMAIN"
 mkdir -p "$WEB_PATH"
 
 # Генерируем сайт маскировку
-bash -c "$(curl -L https://github.com/v0vc/autoXRAY/raw/refs/heads/main/test/gen_page2.sh)" -- $WEB_PATH
+bash -c "$(curl -sL https://github.com/v0vc/autoXRAY/raw/refs/heads/main/test/gen_page3.sh)" -- "$WEB_PATH"
 
 # Установка Xray
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+bash -c "$(curl -sL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install --version v26.7.28
 
 # Блок CERTBOT - START
 
 # Определяем путь к конфигу nginx
 if [ -f /etc/nginx/sites-available/default ]; then
     CONFIG_PATH="/etc/nginx/sites-available/default"
-    echo -e "${GRN}Обнаружена стандартная сборка nginx. ${NC}"
+	echo -e "${GRN}Обнаружена стандартная сборка nginx. ${NC}"
 elif [ -f /etc/nginx/conf.d/default.conf ]; then
     CONFIG_PATH="/etc/nginx/conf.d/default.conf"
-    echo -e "${YEL}Обнаружена нестандартная сборка nginx. Предварительная настройка NGINX для CERTBOT ${NC}"
-    mkdir -p /var/www/html
+	echo -e "${YEL}Обнаружена нестандартная сборка nginx. Предварительная настройка NGINX для CERTBOT ${NC}"
+	mkdir -p /var/www/html
 
-    # Записываем временный конфиг
-    cat <<EOF >"$CONFIG_PATH"
+# Записываем временный конфиг
+cat <<EOF > "$CONFIG_PATH"
 server {
-    listen 80 default_server;
-    server_name _;
+	listen 80 default_server;
+	server_name _;
 
-    location /.well-known/acme-challenge/ {
-        root /var/www/html;
-        allow all;
-    }
+	location /.well-known/acme-challenge/ {
+		root /var/www/html;
+		allow all;
+	}
 
-    location / {
-        return 301 https://\$host\$request_uri;
-    }
+	location / {
+		return 301 https://\$host\$request_uri;
+	}
 }
 EOF
-    systemctl reload nginx
+	systemctl reload nginx
 else
     echo -e "${RED}Не найден ни один default конфиг nginx${NC}"
     exit 1
 fi
 
+
 mkdir -p /var/lib/xray/cert/
 
-### Проверить
-cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem
-cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem
-chmod 744 /var/lib/xray/cert/privkey.pem
-chmod 744 /var/lib/xray/cert/fullchain.pem
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem
+    cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem
+    chmod 744 /var/lib/xray/cert/privkey.pem
+    chmod 744 /var/lib/xray/cert/fullchain.pem
+fi
 
 certbot certonly --webroot -w /var/www/html \
-    -d $DOMAIN \
-    -m mail@$DOMAIN \
-    --agree-tos --non-interactive \
-    --deploy-hook "systemctl reload nginx; cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem; cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/fullchain.pem; systemctl restart xray"
+  -d $DOMAIN \
+  -m mail@$DOMAIN \
+  --agree-tos --non-interactive \
+  --deploy-hook "systemctl reload nginx; cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /var/lib/xray/cert/fullchain.pem; cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/privkey.pem; chmod 744 /var/lib/xray/cert/fullchain.pem; systemctl restart xray"
 
 RET=$?
 
 if [ $RET -eq 0 ]; then
-    echo -e "\n${GRN}========================================"
-    echo "✅  Команда certbot успешно выполнена"
-    echo "✅  Сертификат https от letsencrypt ПОЛУЧЕН"
-    echo "========================================"
-    echo -e "${NC}"
+  echo -e "\n${GRN}========================================"
+  echo    "✅  Команда certbot успешно выполнена"
+  echo    "✅  Сертификат https от letsencrypt ПОЛУЧЕН"
+  echo    "========================================"
+  echo -e "${NC}"
 else
-    echo -e "\n${RED}========================================"
-    echo "❌  CERTBOT ЗАВЕРШИЛСЯ С ОШИБКОЙ"
-    echo "❌  Сертификат https от letsencrypt НЕ ПОЛУЧЕН!"
-    echo "❌  Смотрите выше логи процесса получения сертификата"
-    echo "❌  Код возврата: $RET"
-    echo "========================================"
-    echo -e "${NC}"
-    exit 1
+  echo -e "\n${RED}========================================"
+  echo    "❌  CERTBOT ЗАВЕРШИЛСЯ С ОШИБКОЙ"
+  echo    "❌  Сертификат https от letsencrypt НЕ ПОЛУЧЕН!"
+  echo    "❌  Смотрите выше логи процесса получения сертификата"
+  echo    "❌  Код возврата: $RET"
+  echo    "========================================"
+  echo -e "${NC}"
+  exit 1
 fi
 # Блок CERTBOT - END
 
 # конфиг nginx
 
 path_xhttp=$(openssl rand -base64 15 | tr -dc 'a-z0-9' | head -c 6)
+path_subpage=$(openssl rand -base64 15 | tr -dc 'A-Za-z0-9' | head -c 20)
 
-bash -c "cat > $CONFIG_PATH" <<EOF
+# Выбираем один сценарий ошибки
+AUTH_VARIANTS=(
+    "ERR_INVALID_CREDENTIALS|The username or password you entered is incorrect."
+    "ERR_INVALID_CREDENTIALS|The identity or security key you provided is invalid."
+    "ERR_BAD_PASSWORD|Incorrect password. Please verify your credentials and retry."
+    "ERR_KEY_MISMATCH|The security key provided does not match the account identity."
+    "ERR_CREDENTIAL_REJECTED|Credential verification rejected by the authentication authority."
+    "ERR_PASSWORD_MISMATCH|The password provided does not match the registered key."
+    "ERR_INCORRECT_KEY|Incorrect security credentials provided for this principal."
+    "ERR_USER_NOT_FOUND|Principal identity not found in directory services."
+    "ERR_IDENTITY_NOT_FOUND|No account found matching the provided identity."
+    "ERR_PRINCIPAL_MISSING|User principal does not exist in this organizational realm."
+    "ERR_ACCOUNT_NOT_FOUND|Account identifier not recognized by the identity provider."
+    "ERR_UNKNOWN_USER|Unrecognized user identity. Please verify your login."
+    "ERR_LOOKUP_FAILED|User lookup failed: Specified identity does not exist."
+    "ERR_AUTH_FAILED|Authentication failed: The provided credentials do not match."
+    "ERR_DIRECTORY_MISMATCH|Credentials could not be verified against the corporate directory."
+    "ERR_RECORDS_MISMATCH|The security credentials entered do not match our records."
+)
+
+RAND_AUTH=${AUTH_VARIANTS[$RANDOM % ${#AUTH_VARIANTS[@]}]}
+AUTH_CODE=$(echo "$RAND_AUTH" | cut -d'|' -f1)
+AUTH_MSG=$(echo "$RAND_AUTH" | cut -d'|' -f2)
+
+# Конфиг Nginx
+cat <<EOF > "$CONFIG_PATH"
 server {
     server_name $DOMAIN;
     listen unix:/dev/shm/nginx.sock ssl http2 proxy_protocol;
@@ -146,21 +205,55 @@ server {
     listen unix:/dev/shm/nginx_h2.sock http2 proxy_protocol;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
+
+    server_tokens off;
+
     root /var/www/$DOMAIN;
-    index index.php index.html;
+    index index.html;
+
+    # grpc settings
+    grpc_read_timeout 1h;
+    grpc_send_timeout 1h;
+    grpc_set_header X-Real-IP \$remote_addr;
+
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
+
     ssl_session_timeout 1d;
     ssl_session_cache shared:MozSSL:10m;
     ssl_session_tickets off;
+
     ssl_certificate "/etc/letsencrypt/live/$DOMAIN/fullchain.pem";
     ssl_certificate_key "/etc/letsencrypt/live/$DOMAIN/privkey.pem";
+
+    location = /${path_subpage}.json {
+        add_header profile-title "base64:YXV0b1hSQVk=";
+        add_header routing "happ://routing/onadd/eyJOYW1lIjoiYXV0b1hSQVkiLCJHbG9iYWxQcm94eSI6InRydWUiLCJSb3V0ZU9yZGVyIjoiYmxvY2stcHJveHktZGlyZWN0IiwiUmVtb3RlRE5TVHlwZSI6IkRvSCIsIlJlbW90ZUROU0RvbWFpbiI6Imh0dHBzOi8vZG5zLmdvb2dsZS9kbnMtcXVlcnkiLCJSZW1vdGVETlNJUCI6IjguOC40LjQiLCJEb21lc3RpY0ROU1R5cGUiOiJEb0giLCJEb21lc3RpY0ROU0RvbWFpbiI6Imh0dHBzOi8vY2xvdWRmbGFyZS1kbnMuY29tL2Rucy1xdWVyeSIsIkRvbWVzdGljRE5TSVAiOiIxLjEuMS4xIiwiR2VvaXB1cmwiOiJodHRwczovL2dpdGh1Yi5jb20vTG95YWxzb2xkaWVyL3YycmF5LXJ1bGVzLWRhdC9yZWxlYXNlcy9sYXRlc3QvZG93bmxvYWQvZ2VvaXAuZGF0IiwiR2Vvc2l0ZXVybCI6Imh0dHBzOi8vZ2l0aHViLmNvbS9Mb3lhbHNvbGRpZXIvdjJyYXktcnVsZXMtZGF0L3JlbGVhc2VzL2xhdGVzdC9kb3dubG9hZC9nZW9zaXRlLmRhdCIsIkxhc3RVcGRhdGVkIjoiMTc3NTIwNjEwOCIsIkRuc0hvc3RzIjp7fSwiRGlyZWN0U2l0ZXMiOlsiZ2Vvc2l0ZTpjYXRlZ29yeS1ydSIsImdlb3NpdGU6cHJpdmF0ZSJdLCJEaXJlY3RJcCI6WyJnZW9pcDpwcml2YXRlIl0sIlByb3h5U2l0ZXMiOltdLCJQcm94eUlwIjpbXSwiQmxvY2tTaXRlcyI6WyJnZW9zaXRlOmNhdGVnb3J5LWFkcyIsImdlb3NpdGU6d2luLXNweSJdLCJCbG9ja0lwIjpbXSwiRG9tYWluU3RyYXRlZ3kiOiJJUElmTm9uTWF0Y2giLCJGYWtlRE5TIjoiZmFsc2UiLCJVc2VDaHVua0ZpbGVzIjoiZmFsc2UifQ";
+        add_header routing-enable 0;
+    }
+
     location /${path_xhttp} {
         proxy_pass http://127.0.0.1:8400;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
     }
+
+    # Для сайта
+    location /api/v1/authenticate {
+        limit_except POST {
+            deny all;
+        }
+
+        default_type application/json;
+
+        add_header Set-Cookie "X-Auth-Token=\$request_id; Path=/; HttpOnly; Secure; SameSite=Lax" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+
+        return 401 '{"success":false,"code":"$AUTH_CODE","message":"$AUTH_MSG","request_id":"\$request_id"}';
+    }
+
     location ~ /\.ht {
         deny all;
     }
@@ -169,9 +262,11 @@ server {
 server {
     listen 80;
     server_name $DOMAIN;
+
     location /.well-known/acme-challenge/ {
         root /var/www/html;
     }
+
     location / {
         return 301 https://\$host\$request_uri;
     }
@@ -180,31 +275,32 @@ EOF
 
 systemctl restart nginx
 echo -e "${GRN}✅ Конфигурация nginx обновлена.${NC}"
+
 SCRIPT_DIR=/usr/local/etc/xray
 
 # Генерируем переменные
 xray_tag="VlessReality"
 hysteria_tag="Hysteria2"
-fpBro="firefox"
 xray_uuid_vrv=$(xray uuid)
 key_output=$(xray x25519)
 xray_privateKey_vrv=$(echo "$key_output" | awk -F': ' '/PrivateKey/ {print $2}')
 xray_publicKey_vrv=$(echo "$key_output" | awk -F': ' '/Password/ {print $2}')
 xray_shortIds_vrv=$(openssl rand -hex 8)
-path_subpage=$(openssl rand -base64 15 | tr -dc 'A-Za-z0-9' | head -c 20)
-socksUser=$(openssl rand -base64 16 | tr -dc 'A-Za-z0-9' | head -c 6)
-socksPasw=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 16)
 
 # Установка WARP-cli
-if ss -tuln | grep -q ":40000 "; then
-    echo -e "${GRN}WARP-cli (Socks5 на порту 40000) уже работает. Пропускаем.${NC}"
+if [ "$INSTALL_WARP" = true ]; then
+    if ss -tuln | grep -q ":40000 "; then
+        echo -e "${GRN}WARP-cli (Socks5 на порту 40000) уже работает. Пропускаем.${NC}"
+    else
+        echo -e "${GRN}Установка WARP-cli (автоматически)...${NC}"
+        echo -e "1\n1\n40000" | bash <(curl -fsSL https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh) w
+    fi
 else
-    echo -e "${GRN}Установка WARP-cli (автоматически)...${NC}"
-    echo -e "1\n1\n40000" | bash <(curl -fsSL https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh) w
+    echo -e "${YEL}Установка WARP пропущена по выбору пользователя.${NC}"
 fi
 
 # Экспортируем переменные для envsubst
-export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag hysteria_tag socksUser socksPasw fpBro
+export xray_uuid_vrv xray_privateKey_vrv xray_publicKey_vrv xray_shortIds_vrv DOMAIN path_subpage path_xhttp WEB_PATH xray_tag hysteria_tag fpBro
 
 # Создаем JSON конфигурацию сервера
 cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
@@ -224,21 +320,26 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
         ],
         "queryStrategy": "UseIPv4"
     },
-    "inbounds": [{
+    "inbounds": [
+        {
             "tag": "${xray_tag}",
             "port": 443,
             "listen": "0.0.0.0",
             "protocol": "vless",
             "settings": {
-                "clients": [{
-                    "flow": "xtls-rprx-vision",
-                    "id": "${xray_uuid_vrv}"
-                }],
+                "clients": [
+                    {
+                        "flow": "xtls-rprx-vision",
+                        "id": "${xray_uuid_vrv}"
+                    }
+                ],
                 "decryption": "none",
-                "fallbacks": [{
-                    "dest": "3333",
-                    "xver": 2
-                }]
+                "fallbacks": [
+                    {
+                        "dest": "3333",
+                        "xver": 2
+                    }
+                ]
             },
             "sniffing": {
                 "enabled": true,
@@ -275,9 +376,11 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
-                "clients": [{
-                    "id": "${xray_uuid_vrv}"
-                }],
+                "clients": [
+                    {
+                        "id": "${xray_uuid_vrv}"
+                    }
+                ],
                 "decryption": "none"
             },
             "sniffing": {
@@ -306,9 +409,11 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
-                "clients": [{
-                    "id": "${xray_uuid_vrv}"
-                }],
+                "clients": [
+                    {
+                        "id": "${xray_uuid_vrv}"
+                    }
+                ],
                 "decryption": "none"
             },
             "streamSettings": {
@@ -338,9 +443,11 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
-                "clients": [{
-                    "auth": "${xray_shortIds_vrv}"
-                }]
+                "clients": [
+                    {
+                        "auth": "${xray_shortIds_vrv}"
+                    }
+                ]
             },
             "streamSettings": {
                 "network": "hysteria",
@@ -350,11 +457,13 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
                     "alpn": [
                         "h3"
                     ],
-                    "certificates": [{
-                        "usage": "encipherment",
-                        "certificateFile": "/var/lib/xray/cert/fullchain.pem",
-                        "keyFile": "/var/lib/xray/cert/privkey.pem"
-                    }]
+                    "certificates": [
+                        {
+                            "usage": "encipherment",
+                            "certificateFile": "/var/lib/xray/cert/fullchain.pem",
+                            "keyFile": "/var/lib/xray/cert/privkey.pem"
+                        }
+                    ]
                 },
                 "hysteriaSettings": {
                     "version": 2,
@@ -370,7 +479,8 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
             }
         }
     ],
-    "outbounds": [{
+    "outbounds": [
+        {
             "tag": "direct",
             "protocol": "freedom",
             "settings": {
@@ -385,23 +495,27 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
             "tag": "warp",
             "protocol": "socks",
             "settings": {
-                "servers": [{
-                    "address": "127.0.0.1",
-                    "port": 40000
-                }]
+                "servers": [
+                    {
+                        "address": "127.0.0.1",
+                        "port": 40000
+                    }
+                ]
             },
-           	"targetStrategy": "ForceIPv4v6"
+            "targetStrategy": "ForceIPv4v6"
         }
     ],
     "routing": {
-        "rules": [{
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+            {
                 "ip": [
                     "geoip:private"
                 ],
                 "outboundTag": "block"
             },
             {
-                "port": "25",
+                "port": "25, 135, 137-139, 445",
                 "outboundTag": "block"
             },
             {
@@ -438,8 +552,7 @@ cat <<'EOF' | envsubst >"$SCRIPT_DIR/config.json"
                     "geosite:ru-blocked"
                 ]
             }
-        ],
-        "domainStrategy": "IPIfNonMatch"
+        ]
     }
 }
 
@@ -457,6 +570,18 @@ print_config() {
     },
     "dns": {
         "servers": [
+            {
+                "address": "https+local://77.88.8.8/dns-query",
+                "domains": [
+                    "geosite:category-ru",
+                    "geosite:yandex",
+                    "geosite:vk",
+                    "domain:ru",
+                    "domain:su",
+                    "domain:xn--p1ai"
+                ],
+                "skipFallback": true
+            },
             "https://8.8.4.4/dns-query",
             "https://8.8.8.8/dns-query",
             "https://1.1.1.1/dns-query"
@@ -464,6 +589,7 @@ print_config() {
         "queryStrategy": "UseIPv4"
     },
     "routing": {
+        "domainMatcher": "hybrid",
         "domainStrategy": "IPIfNonMatch",
         "rules": [
             {
@@ -474,7 +600,8 @@ print_config() {
             },
             {
                 "ip": [
-                    "geoip:private"
+                    "geoip:private",
+                    "geoip:ru"
                 ],
                 "outboundTag": "direct"
             },
@@ -499,11 +626,12 @@ print_config() {
             },
             {
                 "domain": [
+                    "domain:ru",
+                    "domain:su",
+                    "domain:xn--p1ai",
                     "geosite:private",
                     "geosite:apple",
                     "geosite:apple-pki",
-                    "geosite:huawei",
-                    "geosite:xiaomi",
                     "geosite:category-android-app-download",
                     "geosite:f-droid",
                     "geosite:yandex",
@@ -572,68 +700,72 @@ TPL
 
 # --- Config 1
 OUT_REALITY_VISION='{
-"mux": {
-    "concurrency": -1,
-    "enabled": false
-},
-"tag": "proxy",
-"protocol": "vless",
-"settings": {
-    "vnext": [{
-        "address": "$DOMAIN",
-        "port": 443,
-        "users": [{
-            "id": "${xray_uuid_vrv}",
-            "flow": "xtls-rprx-vision",
-            "encryption": "none"
-        }]
-    }]
-},
-"streamSettings": {
-    "network": "raw",
-    "security": "reality",
-    "realitySettings": {
-        "show": false,
-        "fingerprint": "$fpBro",
-        "serverName": "$DOMAIN",
-        "password": "${xray_publicKey_vrv}",
-        "shortId": "${xray_shortIds_vrv}",
-        "spiderX": "/"
+    "mux": {
+        "concurrency": -1,
+        "enabled": false
+    },
+    "tag": "proxy",
+    "protocol": "vless",
+    "settings": {
+        "vnext": [
+            {
+                "address": "$DOMAIN",
+                "port": 443,
+                "users": [
+                    {
+                        "id": "${xray_uuid_vrv}",
+                        "flow": "xtls-rprx-vision",
+                        "encryption": "none"
+                    }
+                ]
+            }
+        ]
+    },
+    "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+            "show": false,
+            "fingerprint": "$fpBro",
+            "serverName": "$DOMAIN",
+            "password": "${xray_publicKey_vrv}",
+            "shortId": "${xray_shortIds_vrv}",
+            "spiderX": "/"
+        }
     }
-}
 }'
 
 # --- Config 2
 HYSTERIA2='{
-"tag": "proxy",
-"protocol": "hysteria",
-"settings": {
-    "address": "$DOMAIN",
-    "port": 8080,
-    "version": 2
-},
-"streamSettings": {
-    "network": "hysteria",
-    "security": "tls",
-    "tlsSettings": {
-        "serverName": "$DOMAIN",
-        "alpn": [
-            "h3"
-        ]
+    "tag": "proxy",
+    "protocol": "hysteria",
+    "settings": {
+        "address": "$DOMAIN",
+        "port": 8080,
+        "version": 2
     },
-    "fingerprint": "$fpBro",
-    "hysteriaSettings": {
-        "version": 2,
-        "auth": "${xray_shortIds_vrv}"
-    },
-    "finalmask": {
-        "quicParams": {
-            "congestion": "brutal",
-            "brutalUp": "100 mbps",
-            "brutalDown": "100 mbps"
+    "streamSettings": {
+        "network": "hysteria",
+        "security": "tls",
+        "tlsSettings": {
+            "serverName": "$DOMAIN",
+            "alpn": [
+                "h3"
+            ]
+        },
+        "fingerprint": "$fpBro",
+        "hysteriaSettings": {
+            "version": 2,
+            "auth": "${xray_shortIds_vrv}"
+        },
+        "finalmask": {
+            "quicParams": {
+                "congestion": "brutal",
+                "brutalUp": "100 mbps",
+                "brutalDown": "100 mbps"
+            }
         }
     }
-}
 }'
 
 (
@@ -721,10 +853,12 @@ EOF
 echo -e "\n${YEL}=== Финальная проверка статусов ===${NC}"
 
 # Проверка WARP-cli (Socks5 порт 40000)
-if nc -z 127.0.0.1 40000; then
-    echo -e "WARP-cli: ${GRN}LISTENING${NC}"
-else
-    echo -e "WARP-cli: ${RED}NOT LISTENING${NC}"
+if [ "$INSTALL_WARP" = true ]; then
+    if ss -nlt | grep -q ":40000\b"; then
+        echo -e "WARP-cli: ${GRN}LISTENING${NC}"
+    else
+        echo -e "WARP-cli: ${RED}NOT LISTENING${NC}"
+    fi
 fi
 
 # Проверка Nginx
